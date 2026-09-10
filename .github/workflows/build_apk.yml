@@ -1,0 +1,56 @@
+name: Build APK
+
+# Builds a debug APK automatically whenever code is pushed, and also
+# lets you trigger a build manually from the Actions tab (the "Run
+# workflow" button). No Flutter/Android SDK install needed on your
+# own machine — GitHub's servers do the build.
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Set up Java (required by the Android build)
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.0'
+          channel: 'stable'
+
+      # This zip only ships lib/ + pubspec.yaml (built outside Flutter
+      # tooling). This step generates the missing native android/ folder
+      # without touching your existing lib/ or pubspec.yaml.
+      - name: Generate native Android project files
+        run: flutter create --platforms=android --org com.sih.karigarsetu .
+
+      - name: Add camera/microphone/internet permissions
+        run: |
+          sed -i '/<manifest/a\
+              <uses-permission android:name="android.permission.CAMERA"/>\
+              <uses-permission android:name="android.permission.RECORD_AUDIO"/>\
+              <uses-permission android:name="android.permission.INTERNET"/>' \
+              android/app/src/main/AndroidManifest.xml
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      # Debug build: doesn't need a signing key, installs fine via
+      # "unknown sources" on your phone — perfect for a hackathon demo.
+      - name: Build debug APK
+        run: flutter build apk --debug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: karigar-setu-apk
+          path: build/app/outputs/flutter-apk/app-debug.apk
