@@ -26,6 +26,11 @@ jobs:
       - name: Generate native Android project files
         run: flutter create --platforms=android --project-name karigar_setu --org com.sih.karigarsetu .
 
+      - name: Bump Android compileSdkVersion
+        run: |
+          sed -i 's/flutter.compileSdkVersion/35/' android/app/build.gradle
+          sed -i 's/flutter.targetSdkVersion/35/' android/app/build.gradle
+
       - name: Add camera/microphone/internet permissions
         run: |
           sed -i '/<manifest/a\
