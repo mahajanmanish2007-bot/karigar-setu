@@ -30,6 +30,12 @@ dependencies:
 
   intl: ^0.19.0
 
+  # In-app WebView to preview generated landing pages
+  webview_flutter: ^4.0.7
+
+  # Secure local storage for user-provided API keys
+  flutter_secure_storage: ^8.0.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
