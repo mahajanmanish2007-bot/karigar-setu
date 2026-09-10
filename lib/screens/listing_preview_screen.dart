@@ -3,6 +3,9 @@ import 'package:flutter/material.dart';
 import '../data/listing_store.dart';
 import '../models/product_listing.dart';
 import '../theme/app_theme.dart';
+import 'landing_page_screen.dart';
+import 'settings_screen.dart';
+import '../services/landing_page_service.dart';
 
 class ListingPreviewScreen extends StatefulWidget {
   final ProductListing listing;
@@ -21,6 +24,7 @@ class ListingPreviewScreen extends StatefulWidget {
 class _ListingPreviewScreenState extends State<ListingPreviewScreen> {
   bool _showHindi = false;
   late double _price;
+  bool _generating = false;
 
   @override
   void initState() {
@@ -61,11 +65,33 @@ class _ListingPreviewScreenState extends State<ListingPreviewScreen> {
     );
   }
 
+  Future<void> _generateLandingPage() async {
+    setState(() => _generating = true);
+    widget.listing.finalPrice = _price;
+    try {
+      final result = await LandingPageService.generateLandingPage(widget.listing);
+      final html = result['html']!;
+      // Open preview
+      if (!mounted) return;
+      await Navigator.of(context).push(MaterialPageRoute(builder: (_) => LandingPageScreen(htmlContent: html, filePath: result['path'])));
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to generate landing page: $e')));
+    } finally {
+      if (mounted) setState(() => _generating = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final listing = widget.listing;
     return Scaffold(
-      appBar: AppBar(title: const Text('Review Listing')),
+      appBar: AppBar(
+        title: const Text('Review Listing'),
+        actions: [
+          IconButton(onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const SettingsScreen())), icon: const Icon(Icons.settings))
+        ],
+      ),
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
@@ -133,6 +159,12 @@ class _ListingPreviewScreenState extends State<ListingPreviewScreen> {
           ),
           const SizedBox(height: 28),
           ElevatedButton.icon(
+            icon: _generating ? const SizedBox(width:16,height:16,child:CircularProgressIndicator(strokeWidth:2,color:Colors.white)) : const Icon(Icons.web),
+            label: const Text('Generate Landing Page'),
+            onPressed: _generating ? null : _generateLandingPage,
+          ),
+          const SizedBox(height: 12),
+          ElevatedButton.icon(
             icon: const Icon(Icons.rocket_launch_rounded),
             label: const Text('Publish to Marketplace'),
             onPressed: _publish,
@@ -157,30 +189,6 @@ class _ListingPreviewScreenState extends State<ListingPreviewScreen> {
       ],
       selected: {_showHindi},
       onSelectionChanged: (s) => setState(() => _showHindi = s.first),
-    );
-  }
-}
-
-class _AiTag extends StatelessWidget {
-  final String label;
-  const _AiTag({required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: AppColors.gold.withOpacity(0.2),
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Icon(Icons.auto_awesome, size: 12, color: AppColors.terracottaDark),
-          const SizedBox(width: 4),
-          Text(label, style: const TextStyle(fontSize: 11, color: AppColors.terracottaDark, fontWeight: FontWeight.w600)),
-        ],
-      ),
     );
   }
 }
