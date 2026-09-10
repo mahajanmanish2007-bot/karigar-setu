@@ -20,16 +20,11 @@ jobs:
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.24.0'
+          flutter-version: '3.29.0'
           channel: 'stable'
 
       - name: Generate native Android project files
         run: flutter create --platforms=android --project-name karigar_setu --org com.sih.karigarsetu .
-
-      - name: Bump Android compileSdkVersion
-        run: |
-          sed -i 's/flutter.compileSdkVersion/35/' android/app/build.gradle
-          sed -i 's/flutter.targetSdkVersion/35/' android/app/build.gradle
 
       - name: Add camera/microphone/internet permissions
         run: |
