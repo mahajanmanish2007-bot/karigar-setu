@@ -24,7 +24,7 @@ jobs:
           channel: 'stable'
 
       - name: Generate native Android project files
-        run: flutter create --platforms=android --org com.sih.karigarsetu .
+        run: flutter create --platforms=android --project-name karigar_setu --org com.sih.karigarsetu .
 
       - name: Add camera/microphone/internet permissions
         run: |
